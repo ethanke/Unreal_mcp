@@ -221,7 +221,7 @@ const handlers: Record<string, ActorActionHandler> = {
     },
     spawn_blueprint: async (args, tools) => {
         const params = normalizeArgs(args, [
-            { key: 'blueprintPath', aliases: ['path', 'bp'], required: true },
+            { key: 'blueprintPath', aliases: ['path', 'bp'], required: true, map: ACTOR_CLASS_ALIASES },
             { key: 'actorName', aliases: ['name'] }
         ]);
         const blueprintPath = extractString(params, 'blueprintPath');

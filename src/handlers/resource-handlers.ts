@@ -6,6 +6,8 @@ import { AssetResources } from '../resources/assets.js';
 import { ActorResources } from '../resources/actors.js';
 import { LevelResources } from '../resources/levels.js';
 import { HealthMonitor } from '../services/health-monitor.js';
+import fs from 'fs';
+import path from 'path';
 
 export class ResourceHandler {
   constructor(
@@ -178,6 +180,56 @@ export class ResourceHandler {
             text: JSON.stringify(info, null, 2)
           }]
         };
+      }
+
+      if (uri === 'ue://sgk/blueprints') {
+        const projectPath = process.env.UE_PROJECT_PATH;
+        if (!projectPath) {
+          return { contents: [{ uri, mimeType: 'text/plain', text: 'UE_PROJECT_PATH not set.' }] };
+        }
+        const indexPath = path.join(projectPath, '.bp-index', 'index.json');
+        try {
+          const raw = fs.readFileSync(indexPath, 'utf-8');
+          const data = JSON.parse(raw);
+          const entries = Object.entries(data.index).map(([p, info]: [string, any]) => ({
+            path: p, name: info.n, type: info.t,
+          }));
+          return {
+            contents: [{
+              uri, mimeType: 'application/json',
+              text: JSON.stringify({ meta: data.meta, totalBlueprints: entries.length, blueprints: entries }, null, 2),
+            }],
+          };
+        } catch {
+          return { contents: [{ uri, mimeType: 'text/plain', text: `BP index not found at ${indexPath}` }] };
+        }
+      }
+
+      if (uri.startsWith('ue://sgk/blueprints/search')) {
+        const projectPath = process.env.UE_PROJECT_PATH;
+        if (!projectPath) {
+          return { contents: [{ uri, mimeType: 'text/plain', text: 'UE_PROJECT_PATH not set.' }] };
+        }
+        const queryMatch = uri.match(/[?&]q=([^&]+)/);
+        const query = queryMatch ? decodeURIComponent(queryMatch[1]).toLowerCase() : '';
+        const indexPath = path.join(projectPath, '.bp-index', 'index.json');
+        try {
+          const raw = fs.readFileSync(indexPath, 'utf-8');
+          const data = JSON.parse(raw);
+          const results = Object.entries(data.index)
+            .filter(([p, info]: [string, any]) =>
+              p.toLowerCase().includes(query) || info.n.toLowerCase().includes(query)
+            )
+            .map(([p, info]: [string, any]) => ({ path: p, name: info.n, type: info.t }));
+          return {
+            contents: [{
+              uri, mimeType: 'application/json',
+              text: JSON.stringify({ query, count: results.length, results }, null, 2),
+            }],
+          };
+        } catch {
+          return { contents: [{ uri, mimeType: 'text/plain', text: 'BP index not found.' }] };
+        }
       }
 
       throw new Error(`Unknown resource: ${uri}`);

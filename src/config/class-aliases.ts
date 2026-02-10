@@ -36,6 +36,26 @@ export const ACTOR_CLASS_ALIASES: Record<string, string> = {
     'TriggerBox': '/Script/Engine.TriggerBox',
     'TriggerSphere': '/Script/Engine.TriggerSphere',
     'BlockingVolume': '/Script/Engine.BlockingVolume',
+
+    // SGKv2 - Characters & Game Framework
+    'SGKCharacter': '/Game/SurvivalGameKitV2/Blueprints/Characters/BP_SGKMasterCharacter',
+    'SGKGameMode': '/Game/SurvivalGameKitV2/Blueprints/Characters/BP_SGKGameMode',
+    'SGKController': '/Game/SurvivalGameKitV2/Blueprints/Characters/BP_SGKController',
+
+    // SGKv2 - Building System
+    'BuildPart': '/Game/SurvivalGameKitV2/Blueprints/BuildParts/BP_MasterBuildPart',
+    'StorageBuildPart': '/Game/SurvivalGameKitV2/Blueprints/BuildParts/BP_MasterStorageBuildPart',
+    'CraftingBuildPart': '/Game/SurvivalGameKitV2/Blueprints/BuildParts/BP_MasterCraftingBuildPart',
+    'CookingBuildPart': '/Game/SurvivalGameKitV2/Blueprints/BuildParts/BP_MasterCookingBuildPart',
+
+    // SGKv2 - Inventory
+    'MasterInventory': '/Game/SurvivalGameKitV2/Components/BP_MasterInventory',
+
+    // SmartAI
+    'AIBase': '/Game/SmartAI/Blueprints/AI/BP_MasterAIBase',
+    'AISpawnPoint': '/Game/SmartAI/Blueprints/AI/BP_AISpawnPoint',
+    'AISpawnVolume': '/Game/SmartAI/Blueprints/AI/BP_AISpawningVolume',
+    'AIWaveSpawner': '/Game/SmartAI/Blueprints/AI/BP_AIWaveSpawningVolume',
 };
 
 /**

@@ -4535,5 +4535,33 @@ export const consolidatedToolDefinitions: ToolDefinition[] = [
         error: commonSchemas.stringProp
       }
     }
+  },
+  {
+    name: 'sgk',
+    category: 'utility',
+    description: 'SGKv2 survival game project shortcuts. Query blueprint index, get project paths, search enriched metadata. Works OFFLINE (no editor needed).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        action: {
+          type: 'string',
+          enum: ['query_blueprints', 'query_enriched', 'get_project_paths', 'get_index_stats'],
+          description: 'query_blueprints: search 1032-BP index by name/path. query_enriched: search AI-enriched index (purpose, category, agent_hint). get_project_paths: returns all key SGKv2 paths and blueprint references. get_index_stats: index summary with type counts and top paths.'
+        },
+        query: {
+          type: 'string',
+          description: 'Search term for query_blueprints and query_enriched actions.'
+        },
+        type: {
+          type: 'string',
+          description: 'Filter by blueprint type (e.g. bp, unk) for query_blueprints.'
+        },
+        limit: {
+          type: 'number',
+          description: 'Max results to return (default 25 for query_blueprints, 10 for query_enriched).'
+        }
+      },
+      required: ['action']
+    }
   }
 ];

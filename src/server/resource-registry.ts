@@ -29,7 +29,9 @@ export class ResourceRegistry {
                     { uri: 'ue://level', name: 'Current Level', description: 'Current level name and path', mimeType: 'application/json' },
                     { uri: 'ue://health', name: 'Health Status', description: 'Server health and performance metrics', mimeType: 'application/json' },
                     { uri: 'ue://automation-bridge', name: 'Automation Bridge', description: 'Automation bridge diagnostics and recent activity', mimeType: 'application/json' },
-                    { uri: 'ue://version', name: 'Engine Version', description: 'Unreal Engine version and compatibility info', mimeType: 'application/json' }
+                    { uri: 'ue://version', name: 'Engine Version', description: 'Unreal Engine version and compatibility info', mimeType: 'application/json' },
+                    { uri: 'ue://sgk/blueprints', name: 'SGKv2 Blueprint Index', description: 'Complete blueprint index (1032 BPs with paths, names, types). Works offline.', mimeType: 'application/json' },
+                    { uri: 'ue://sgk/blueprints/search', name: 'SGKv2 Blueprint Search', description: 'Search blueprints by name/path pattern. Use ?q=pattern in URI.', mimeType: 'application/json' }
                 ]
             };
         });
