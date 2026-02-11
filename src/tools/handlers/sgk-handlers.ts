@@ -2,11 +2,13 @@
  * SGKv2 Project-Specific Handlers
  * Provides shortcuts for common SGKv2 survival game operations.
  * All actions read from disk (.bp-index/) — no editor connection required.
+ * ai_query uses Cerebras API for sub-second inference.
  */
 import { ITools } from '../../types/tool-interfaces.js';
 import type { HandlerArgs } from '../../types/handler-types.js';
 import fs from 'fs';
 import path from 'path';
+import https from 'https';
 
 interface BPIndexEntry {
   n: string;  // name
@@ -169,7 +171,112 @@ export async function handleSGKTools(
       };
     }
 
+    case 'ai_query': {
+      const query = typeof a.query === 'string' ? a.query : '';
+      if (!query) return { success: false, error: 'query is required for ai_query action.' };
+
+      const apiKey = process.env.CEREBRAS_API_KEY;
+      if (!apiKey) return { success: false, error: 'CEREBRAS_API_KEY env var not set.' };
+
+      const model = typeof a.model === 'string' ? a.model : 'llama-3.3-70b';
+
+      // Build context from BP index
+      const index = loadBPIndex();
+      let bpContext = '';
+      if (index) {
+        // Find relevant BPs for the query
+        const queryLower = query.toLowerCase();
+        const relevant = Object.entries(index.index)
+          .filter(([p, info]) =>
+            p.toLowerCase().includes(queryLower.split(' ')[0]) ||
+            info.n.toLowerCase().includes(queryLower.split(' ')[0])
+          )
+          .slice(0, 20)
+          .map(([p, info]) => `${info.n} → ${p}`)
+          .join('\n');
+        if (relevant) bpContext = `\n\nRelevant blueprints:\n${relevant}`;
+      }
+
+      const systemPrompt = `You are a senior UE5 game dev assistant for SGKv2, a survival game built on Unreal Engine 5.7.
+
+Key systems: Jigsaw inventory, Building System V2, SmartAI (15 behaviors), weapon system (melee/range, attachments), crafting/cooking queues, equipment/armor, save/load, multiplayer.
+
+Key paths:
+- Characters: /Game/SurvivalGameKitV2/Blueprints/Characters/
+- Build Parts: /Game/SurvivalGameKitV2/Blueprints/BuildParts/
+- Inventory: /Game/SurvivalGameKitV2/Components/
+- Items/Crafting: /Game/SurvivalGameKitV2/Blueprints/Items/
+- AI: /Game/SmartAI/Blueprints/AI/
+- Master Character: BP_SGKMasterCharacter
+- Master Build Part: BP_MasterBuildPart
+- AI Base: BP_MasterAIBase${bpContext}
+
+Answer concisely. Reference specific blueprints/paths when possible.`;
+
+      try {
+        const answer = await cerebrasChat(apiKey, model, systemPrompt, query);
+        return {
+          success: true,
+          model,
+          query,
+          answer,
+          bpContextInjected: !!bpContext,
+        };
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return { success: false, error: `Cerebras API error: ${msg}` };
+      }
+    }
+
     default:
       return { success: false, error: `Unknown sgk action: ${action}` };
   }
+}
+
+async function cerebrasChat(apiKey: string, model: string, system: string, user: string): Promise<string> {
+  const body = JSON.stringify({
+    model,
+    messages: [
+      { role: 'system', content: system },
+      { role: 'user', content: user },
+    ],
+    max_tokens: 500,
+    temperature: 0.3,
+  });
+
+  return new Promise((resolve, reject) => {
+    const req = https.request(
+      {
+        hostname: 'api.cerebras.ai',
+        path: '/v1/chat/completions',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Length': Buffer.byteLength(body),
+        },
+      },
+      (res) => {
+        let data = '';
+        res.on('data', (chunk: Buffer) => { data += chunk.toString(); });
+        res.on('end', () => {
+          try {
+            const parsed = JSON.parse(data);
+            if (parsed.choices?.[0]?.message?.content) {
+              resolve(parsed.choices[0].message.content);
+            } else if (parsed.message) {
+              reject(new Error(parsed.message));
+            } else {
+              reject(new Error('Unexpected response format'));
+            }
+          } catch {
+            reject(new Error(`Failed to parse response: ${data.substring(0, 200)}`));
+          }
+        });
+      }
+    );
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
 }

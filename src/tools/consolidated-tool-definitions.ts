@@ -4539,18 +4539,22 @@ export const consolidatedToolDefinitions: ToolDefinition[] = [
   {
     name: 'sgk',
     category: 'utility',
-    description: 'SGKv2 survival game project shortcuts. Query blueprint index, get project paths, search enriched metadata. Works OFFLINE (no editor needed).',
+    description: 'SGKv2 survival game project shortcuts. Query blueprint index, get project paths, search enriched metadata, AI-powered queries via Cerebras. Works OFFLINE (no editor needed).',
     inputSchema: {
       type: 'object',
       properties: {
         action: {
           type: 'string',
-          enum: ['query_blueprints', 'query_enriched', 'get_project_paths', 'get_index_stats'],
-          description: 'query_blueprints: search 1032-BP index by name/path. query_enriched: search AI-enriched index (purpose, category, agent_hint). get_project_paths: returns all key SGKv2 paths and blueprint references. get_index_stats: index summary with type counts and top paths.'
+          enum: ['query_blueprints', 'query_enriched', 'get_project_paths', 'get_index_stats', 'ai_query'],
+          description: 'query_blueprints: search BP index. query_enriched: search AI-enriched index. get_project_paths: key SGKv2 paths. get_index_stats: index summary. ai_query: ask Cerebras LLM about the project (sub-second, BP-context-aware).'
         },
         query: {
           type: 'string',
-          description: 'Search term for query_blueprints and query_enriched actions.'
+          description: 'Search term or natural language question (for ai_query).'
+        },
+        model: {
+          type: 'string',
+          description: 'Cerebras model for ai_query. Options: llama-3.3-70b (default, best quality), llama3.1-8b (fastest), qwen-3-32b.'
         },
         type: {
           type: 'string',

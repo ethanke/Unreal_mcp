@@ -318,9 +318,11 @@ export class ToolRegistry {
 
             const connected = await this.ensureConnected();
             if (!connected) {
-                // Allow certain tools (pipeline, system checks) to run without connection
+                // Allow certain tools (pipeline, system checks, sgk) to run without connection
                 if (name === 'system_control' && args.action === 'get_project_settings') {
                     // Allowed
+                } else if (name === 'sgk') {
+                    // SGKv2 tool works offline (reads from disk + Cerebras API)
                 } else {
                     this.healthMonitor.trackPerformance(startTime, false);
                     return {
